@@ -1,0 +1,259 @@
+---
+title: "Supporting democracy from the school"
+subtitle: "A comparison of four Latin American countries"
+author:
+- Daniel Miranda, Ph.D. Centro de Medición MIDE UC, Centro para el Estudio del Conflito y la Cohesión Social COES
+- Juan Carlos Castillo, Ph.D. Instituto de Sociología ISUC, Centro para el Estudio del Conflito y la Cohesión Social COES.
+
+abstract: |
+  The political landscape in Latin America over the last 50 years is characterized by a series of military coups and dictatorships. Although nowadays most of the countries have (at least) electoral democracy, results from international survey studies in Latin American adult population - such as Latinobarometro and the Latin American Public Opinion Project (LAPOP) - still show a worrying proportion of citizens skeptical of democracy as well as decreasing levels of trust in political institutions. The present chapter deals with how anti-democratic beliefs are expressed by children of school age in Latin America, how has it changed over the past decade and to what extent schools are able to impact students in this realm. The analyses are based on the Latin American module of the International Civic and Citizenship Education Study, considering the countries of the region that participated in 2009 and 2016: Mexico, Colombia, Dominican Republic and Chile (N=22558 and N=20150, respectively). Results show that student from this set of Latin American countries shows higher level of antidemocratic beliefs, manifested in a high proportion of students that believe that dictatorship are justified when they brings order and safety or economic benefits. Between 2009 and 2016, the trend indicates that these beliefs are decreased, but in Dominican Republic it was increased. Considering the role of the schools, results indicate that the extent to which students obtain higher knowledge about the political system and it rules they diminish the support for antidemocratic beliefs in an important size. This association is stronger in families with higher education. This indicates that students who came from families with higher educational levels take advantages over the school as a source of knowledge about political space, showing a stratified process of socialization of democratic and anti-democratic beliefs. Implications for public policies with a focus in Latin American students will be discussed.
+
+keywords: Political Socialization, Anti-democractic values, ICCS 2019-2016.
+date: Julio de 2018
+output: html_document
+---
+  
+## Outline
+
+- The entire proposal should be no more than 1 page long.
+
+- An abstract of approximately 300 words that describes your ideas for addressing a particular concept, with the theory/ies you will advance or the theorist/s you will use, the key argument you will make, the regions addressed and youth studies issues that will be engaged in their chapter.
+
+- A brief outline of the proposed chapter including sub-headings and the focus of each sub-section.
+    + Introduction
+        + Democratic development of Latin American countries and its threats
+        + Support for democratic values and antidemocratic values
+        + Political Socialization of democratics principles
+    + Data and Methods
+        + ICCS study 2009 and 2016
+        + Variables
+        + Analitycal estrategy
+    + Results
+    + Discussion and Conclussion
+
+- A short biosketch (150 word maximum) that includes your research areas, national origin, current institution and motivation for involvement in this project.
+    + Daniel Miranda is a researcher at the Measurement Center MIDE UC, Pontificia Universidad Católica de Chile (PUC) and Adjunct researcher at the Centre for Social Conflict and Cohesion Studies COES. He obtained his Ph.D in sociology at the Sociology Institute, PUC, Santiago of Chile. Among his current research interest are political socialization processes, youth political participation and attitudes, intergroup relations, intergroup attitudes, public opinion research and quantitative methods.
+    
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_chunk$set(dev = 'jpg')
+# remove all previous objects
+rm(list = ls()) 
+```
+
+
+
+```{r , eval=TRUE, results='asis', echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+pacman::p_load(haven, foreing, ggplot2, reshape, plyr, dplyr, readstata13, VIM, stringr, skimr, xaringan, srvyr, lme4, broom, texreg)
+````
+
+
+## Lectura de datos
+```{r , eval=TRUE, echo=TRUE, warning=FALSE, tidy=TRUE}
+##Directorio para imagenes
+setwd("C:/Users/DANIEL/Dropbox/MIDEUC/Corruption and trust/figures")
+
+iccs16=read.dta13("C:/Users/DANIEL/Dropbox/GEMR 2019/Data/Merge/ICCS_School_Teachers_Students_Europe_LA.dta", convert.factors = FALSE)
+
+iccs09=read.dta13("C:/Users/DANIEL/Dropbox/mesa educacion ciudadana/IEA studies/ICCS/Internacional/LA_ICCS.dta", convert.factors = FALSE)
+
+
+
+#iccs=haven::read_dta("C:/Users/DANIEL/Dropbox/MIDEUC/Corruption and trust/ICCS2016.dta")
+
+## Explorar la base
+
+    #class(iccs)
+    #dim(iccs)
+    #head(iccs)
+    #str(iccs)
+    
+    #names(iccs09)
+    #names(iccs16)
+    
+    #dplyr::glimpse(iccs09) # ver estructura general
+    
+    la16= iccs16 %>%
+      rename_all(tolower) %>%
+      mutate(LA = ifelse(country == "CHL", "LA", ifelse(country == "COL", "LA", ifelse(country == "DOM", "LA", ifelse(country == "MEX", "LA", ifelse(country == "PER", "LA", "NOLA")))))) %>%
+      dplyr::filter(LA=="LA") %>%
+      rowwise() %>% 
+      dplyr::mutate(study="16") %>%
+      dplyr::mutate (dicta1= 5 - ls3g02d)%>%
+      dplyr::mutate (dicta2= 5 - ls3g02e)%>%
+      dplyr::mutate (dictadura= mean(c(dicta1, dicta2)))%>%
+      dplyr::mutate (univ= ifelse(s_hisced>2, 1, 0)) %>%
+      dplyr::mutate (civic= mean(c(pv1civ, pv2civ, pv3civ, pv4civ, pv5civ))) %>%
+      dplyr::select(idcntry, country, idschool, idstud, totwgts, wgtfac1, wgtadj1s, wgtfac2s, wgtadj2s, wgtadj3s, jkzones, jkreps, pv1civ, pv2civ, pv3civ, pv4civ, pv5civ, civic, s_intrust, s_opdisc, s_hisced, s_hisei, s_homlit, s_gender, s_citcon, s_citsoc, s_citresp, s_citeff, s_cntatt, s_abuse, s_civlrn, s_geneql, s_ethrght, l_attviol, l_attdiv, l_atths, l_autgov, l_attcorr, l_dislaw, l_empclas, study, dicta1, dicta2, dictadura, univ)
+    #print
+    #names(la16)
+    #skim(la16)
+    #table(la16$ls3g02d, la16$ls3g02e)
+    #pacman::p_load(Hmisc)
+    #rcorr(la16$ls3g02d, la16$ls3g02b)
+    
+    
+    la09= iccs09 %>%
+      rowwise() %>%
+      dplyr::mutate(study="09") %>%
+      dplyr::mutate (civic= mean(c(pv1civ, pv2civ, pv3civ, pv4civ, pv5civ))) %>%
+      dplyr::mutate (s_intrust= intrust) %>%
+      dplyr::mutate (s_opdisc= opdisc) %>%
+      dplyr::mutate (s_hisced= hisced) %>%
+      dplyr::mutate (s_hisei= hisei) %>%
+      dplyr::mutate (s_homlit= homelit) %>%
+      dplyr::mutate (s_gender= sgender) %>%
+      dplyr::mutate (s_citcon= citcon) %>%
+      dplyr::mutate (s_citsoc= citsoc) %>%
+      dplyr::mutate (s_citeff= citeff) %>%
+      dplyr::mutate (s_cntatt= attcnt) %>%
+      dplyr::mutate (s_geneql= geneql) %>%
+      dplyr::mutate (s_ethrght= ethrght) %>%
+      dplyr::mutate (l_attviol= attviol) %>%
+      dplyr::mutate (l_attdiv= attdiff) %>%
+      dplyr::mutate (l_autgov= autgov) %>%
+      dplyr::mutate (l_attcorr=attcorr) %>%
+      dplyr::mutate (l_dislaw= dislaw) %>%
+      dplyr::mutate (l_empclas= empath) %>%
+      dplyr::mutate (dicta1= 5 - LS2P03D)%>%
+      dplyr::mutate (dicta2= 5 - LS2P03E)%>%
+      dplyr::mutate (dictadura= mean(c(dicta1, dicta2)))%>%
+      dplyr::mutate (univ= ifelse(s_hisced>3, 1, 0)) %>%
+      dplyr::select(idcntry, country, idschool, idstud, totwgts, wgtfac1, wgtadj1s, wgtfac2s, wgtadj2s, wgtadj3s, jkzones, jkreps, pv1civ, pv2civ, pv3civ, pv4civ, pv5civ, civic, s_intrust, s_opdisc, s_hisced, s_hisei, s_homlit, s_gender, s_citcon, s_citsoc, s_citeff, s_cntatt, s_geneql, s_ethrght, expagg, l_attviol, l_attdiv, l_autgov, l_attcorr, l_dislaw, l_empclas, study, dicta1, dicta2, dictadura, univ) 
+    
+    #print
+    #names(la09)  
+    #skim(la09)
+    
+    mergeiccs=full_join(la16, la09)
+    #names(mergeiccs)
+    #View(merge)
+    #table(mergeiccs$univ)
+    
+    mergeiccs %>% 
+      group_by(study) %>%
+      skimr::skim(c(civic, l_attviol, l_attdiv, l_autgov, l_attcorr, l_dislaw, l_empclas, dictadura, univ))
+    
+    merge4=mergeiccs %>%
+      filter(country=="CHL" | country=="COL" | country=="MEX" | country=="DOM")
+    
+ 
+
+#iccsp= corr %>%
+#  na.omit() %>%
+#  print
+
+    ggplot(merge4, aes(x=study, y=dictadura)) +
+      facet_wrap(~ country) +
+      stat_summary(fun.y = mean, geom = "bar", fill = "White", colour = "Black")
+
+    scatter <- ggplot(merge4, aes(civic, dictadura, colour = factor(country))) 
+    scatter + geom_smooth(method = "lm", alpha = 0.1) + 
+      facet_wrap(~ study) +
+    labs(x = "Conocimiento cívico", y = "Apoyo a dictaduras", colour = "country") 
+
+
+
+## Análisis de Frecuencias: srsvy
+
+## crear un objeto con el diseño
+    #library(srvyr)
+    
+    mergesvy <-  merge4 %>% 
+        as_survey_design(
+        strata = jkzones, 
+        weights = totwgts, 
+        ids = jkreps, 
+        nest = TRUE)
+    
+    #names(mergesvy)
+    #str(mergesvy)
+    
+    #merge= merge4 %>%
+    #  na.omit()
+     
+    
+## Diferencias Autoritarismo de Gobierno
+    res=merge4 %>%
+      group_by(country, study) %>% 
+      do(model = lmer(dictadura ~ 1 + (1 | idschool),weights=totwgts, data = .))
+    
+    #res %>%
+    #  tidy(model)
+    
+    mod=res %>%
+      tidy(model)%>%
+      filter(group=="fixed")
+    
+    ggplot(mod, aes(estimate, reorder(country, estimate), color = (study))) +
+      geom_point(size = 2)+
+      labs(x = 'Intercepto Apoyo Dictaduta', y = 'País')+
+    geom_errorbarh(aes(xmin = estimate - std.error, xmax = estimate + std.error), alpha=1/2)
+````
+
+## Regression model
+
+```{r , eval=TRUE, results='asis', echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+
+    modelfull= lmer(dictadura ~ study  + univ + civic + (1 | idschool), weights=totwgts, data=merge4)
+    
+    modelint= lmer(dictadura ~ study  + univ + civic + univ*civic + (1 | idschool), weights=totwgts, data=merge4)
+
+    #summary(modelint)
+    htmlreg(c(modelfull, modelint))
+````
+
+## Respresentación de la interacción
+
+```{r}
+#----Graficar la interacción
+s_civotro = -0.00189 + 0*-0.001083
+s_civuni = -0.00189 + 1*-0.001083
+
+i_civotro = 3.66 + 0*0.453
+i_civuni = 3.66 + 1*0.453
+
+
+x0 <‐ mergeiccs$civic
+x0=as.numeric(x0)
+
+ed.esp <‐ data.frame(x0 = x0)
+ed.esp$y0 <‐ i_civuni + ed.esp$x0 * s_civuni 
+ed.esp$type <‐ ("Universitario")
+
+
+
+ed.otro <‐ data.frame(x0 = x0)
+ed.otro$y0 <‐ i_civotro + ed.otro$x0*s_civotro
+ed.otro$type <‐ ("Otro")
+
+
+## Create final data frame
+df.ed <‐ rbind(ed.esp, ed.otro)
+df.ed$type <‐ factor(df.ed$type)
+levels(df.ed$type)
+
+skimr::skim(df.ed)
+
+ed= ggplot (df.ed, aes(x = x0, y = y0) ) +
+  xlim(xmin=100,xmax=800)+
+  ylim(xmin=1,xmax=4)+
+  labs(y= "Apoyo a Dictaduras", x="Conocimiento cívico")+ geom_line(aes(colour = type, linetype = type), size=1.5) +
+  #geom_jitter(data, aes(x = x, y = y), size = 3, alpha = 0. 7) +
+  theme_bw() +
+  theme(panel.background = element_rect(fill="white") ) +
+  theme(legend.key = element_blank() ) +
+  theme(text = element_text(size = 14, face="bold")) +
+  scale_colour_manual(name = "Efectos parciales",
+                      labels= c ("Sin Ed. Univ. ***","Ed. Univ. ***") ,
+                      values = c ("#E41A1C", "#575757"))+
+  scale_linetype_manual(name = "Efectos parciales",
+                        labels= c ("Sin Ed. Univ. ***","Ed. Univ. ***"),
+                        values = c ("solid", "longdash"))
+print(ed)
+````
+
+
+
+---
